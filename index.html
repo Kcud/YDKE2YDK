@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ydke → ydk 整理工具</title>
+    <title>ydk ↔ ydke 双向转换工具</title>
     <style>
         * { box-sizing: border-box; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
         body {
@@ -15,6 +15,56 @@
             max-width: 960px; width: 100%; background: white;
             border-radius: 28px; box-shadow: 0 20px 35px -8px rgba(0,0,0,0.15), 0 4px 8px -2px rgba(0,0,0,0.05);
             padding: 2rem 2rem 1.8rem; border: 1px solid #e9eef3;
+        }
+        /* 页签切换器 */
+        .tab-switch {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 1.8rem;
+            background: #eef2f6;
+            border-radius: 60px;
+            padding: 6px;
+            width: fit-content;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            border-radius: 60px;
+            padding: 0.7rem 1.8rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #3a4d64;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: none;
+        }
+        .tab-btn:hover {
+            background: #d9e6ff;
+            color: #1e4b8f;
+        }
+        .tab-btn.active {
+            background: white;
+            color: #0b1a2b;
+            box-shadow: 0 4px 10px -4px rgba(0,0,0,0.1);
+        }
+        .tab-btn .badge {
+            font-size: 0.7rem;
+            background: #dbeafe;
+            padding: 2px 8px;
+            border-radius: 30px;
+            color: #1e4b8f;
+            font-weight: 400;
+        }
+        /* 页面容器 */
+        .page {
+            display: none;
+        }
+        .page.active {
+            display: block;
         }
         h1 {
             font-size: 1.9rem; font-weight: 600; letter-spacing: -0.01em;
@@ -136,66 +186,215 @@
             border-radius: 30px; border: 1px solid #d7e3f0;
             flex: 1 0 180px;
         }
+        .file-drop {
+            border: 2px dashed #b8d0ea; border-radius: 20px; padding: 2rem 1rem;
+            text-align: center; color: #4a5e74; background: #fbfdff;
+            transition: all 0.15s; cursor: pointer; margin-bottom: 0.5rem;
+        }
+        .file-drop.dragover {
+            border-color: #3b82f6; background: #eef6ff;
+        }
+        .file-drop input[type="file"] {
+            display: none;
+        }
+        .file-drop .hint {
+            font-size: 0.85rem; color: #6d829c; margin-top: 0.5rem;
+        }
+        .file-name {
+            font-family: 'SF Mono', monospace; font-size: 0.85rem;
+            color: #1e4b8f; background: #eef4fc; padding: 0.3rem 0.9rem;
+            border-radius: 30px; display: inline-block; margin-top: 0.5rem;
+        }
+        .ydke-output {
+            background: #f0f7ff; border: 1px solid #b8d0ea; border-radius: 14px;
+            padding: 1rem 1.2rem; font-family: 'SF Mono', monospace;
+            font-size: 0.9rem; word-break: break-all; color: #0b2b52;
+            margin-top: 0.8rem; line-height: 1.6; position: relative;
+        }
+        .copy-btn {
+            background: #eef4fc; border: 1px solid #c6daf2; border-radius: 30px;
+            padding: 0.2rem 0.9rem; font-size: 0.75rem; cursor: pointer; color: #1e4b8f;
+            font-weight: 500;
+        }
+        .copy-btn:hover { background: #dcebff; border-color: #8bb3e0; }
+        .page-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 0.2rem; }
     </style>
 </head>
 <body>
     <div class="card">
-        <h1>
-            ydke → ydk 整理工具
-            <small>一键转换</small>
-        </h1>
-        <div class="subhead">
-            解析 <code>ydke://</code> 链接 → 自动整理成 <code>.ydk</code> 文本格式（#main / #extra / !side）
+        <!-- 页签切换器 -->
+        <div class="tab-switch">
+            <button id="tabYdkToYdke" class="tab-btn active">
+                ydk → ydke
+                <span class="badge">上传文件</span>
+            </button>
+            <button id="tabYdkeToYdk" class="tab-btn">
+                ydke → ydk
+                <span class="badge">链接整理</span>
+            </button>
         </div>
 
-        <!-- 解析 ydke 输入 -->
-        <div class="panel">
-            <h2>解析 ydke:// 链接 <span>parseURL → ydk</span></h2>
-            <div class="field-group">
-                <label for="ydkeInput">粘贴 ydke:// 链接</label>
-                <textarea id="ydkeInput" rows="3" placeholder="ydke://..."></textarea>
+        <!-- ========== 页面 1：ydk → ydke ========== -->
+        <div id="pageYdkToYdke" class="page active">
+            <div class="page-header">
+                <h1>
+                    ydk → ydke 转换工具
+                    <small>上传文件生成链接</small>
+                </h1>
             </div>
-            <div class="inline-buttons">
-                <button id="parseBtn" class="primary">解析并整理成 ydk</button>
-                <button id="clearBtn" class="outline small">清空</button>
+            <div class="subhead">
+                上传 <code>.ydk</code> 文件 → 解析卡组 → 生成 <code>ydke://</code> 链接
             </div>
 
-            <!-- 解析结果 (三个列表) -->
-            <div id="parseResult" class="result-area" style="margin-top: 1rem;">
-                <span style="color:#607b99;">解析结果将显示在这里</span>
+            <!-- 上传区域 -->
+            <div class="panel">
+                <h2>上传 YDK 文件 <span>选择或拖拽 .ydk 文件</span></h2>
+                <div class="file-drop" id="fileDrop">
+                    <input type="file" id="fileInput" accept=".ydk,text/plain">
+                    <div style="font-size: 1.1rem; font-weight: 500; color: #1e4b8f;">点击选择文件</div>
+                    <div class="hint">或将 .ydk 文件拖拽到这里</div>
+                    <div id="fileNameDisplay" class="file-name" style="display: none;"></div>
+                </div>
+                <div class="inline-buttons">
+                    <button id="clearFileBtn" class="outline small">清空</button>
+                </div>
+            </div>
+
+            <!-- 解析结果 -->
+            <div class="panel" id="resultPanel" style="display: none;">
+                <h2>解析结果 <span>三个卡组列表</span></h2>
+                <div id="parseResult" class="result-area">
+                    <span style="color:#607b99;">解析结果将显示在这里</span>
+                </div>
+            </div>
+
+            <!-- 生成的 ydke 链接 -->
+            <div class="panel" id="ydkePanel" style="display: none;">
+                <h2>生成的 ydke:// 链接 <span>可直接复制</span></h2>
+                <div class="flex-between">
+                    <span style="font-size:0.8rem; color:#4a5e74;">点击复制按钮将链接复制到剪贴板</span>
+                    <button id="copyYdkeBtn" class="copy-btn">复制链接</button>
+                </div>
+                <div id="ydkeOutput" class="ydke-output">
+                    <span style="color:#607b99;">ydke 链接将显示在这里</span>
+                </div>
+            </div>
+
+            <div class="footnote">
+                <span>纯前端 · 零依赖</span>
+                <span>小端序 Uint32Array reinterpret</span>
+                <span>LGPL-3.0+ 精神</span>
             </div>
         </div>
 
-        <!-- ydk 整理输出 -->
-        <div class="panel" id="ydkPanel" style="display: none;">
-            <h2>整理后的 YDK 文本 <span>可直接保存为 .ydk</span></h2>
-
-            <div class="creator-row">
-                <label>#created by</label>
-                <span class="creator-value">花花的黑眼圈加重了吗</span>
+        <!-- ========== 页面 2：ydke → ydk ========== -->
+        <div id="pageYdkeToYdk" class="page">
+            <div class="page-header">
+                <h1>
+                    ydke → ydk 整理工具
+                    <small>一键转换</small>
+                </h1>
+            </div>
+            <div class="subhead">
+                解析 <code>ydke://</code> 链接 → 自动整理成 <code>.ydk</code> 文本格式（#main / #extra / !side）
             </div>
 
-            <div class="flex-between">
-                <span style="font-size:0.8rem; color:#4a5e74;">每行一个密码 · 可下载为 .ydk 文件</span>
-                <button id="downloadYdkBtn" class="download">下载 .ydk 文件</button>
+            <!-- 解析 ydke 输入 -->
+            <div class="panel">
+                <h2>解析 ydke:// 链接 <span>parseURL → ydk</span></h2>
+                <div class="field-group">
+                    <label for="ydkeInput">粘贴 ydke:// 链接</label>
+                    <textarea id="ydkeInput" rows="3" placeholder="ydke://..."></textarea>
+                </div>
+                <div class="inline-buttons">
+                    <button id="parseBtn" class="primary">解析并整理成 ydk</button>
+                    <button id="clearBtn" class="outline small">清空</button>
+                </div>
+
+                <!-- 解析结果 (三个列表) -->
+                <div id="parseResult2" class="result-area" style="margin-top: 1rem;">
+                    <span style="color:#607b99;">解析结果将显示在这里</span>
+                </div>
             </div>
 
-            <div id="ydkOutput" class="ydk-output">
-                <span style="color:#607b99;">ydk 文本将显示在这里</span>
-            </div>
-        </div>
+            <!-- ydk 整理输出 -->
+            <div class="panel" id="ydkPanel" style="display: none;">
+                <h2>整理后的 YDK 文本 <span>可直接保存为 .ydk</span></h2>
 
-        <!-- 脚注 -->
-        <div class="footnote">
+                <div class="creator-row">
+                    <label>#created by</label>
+                    <span class="creator-value">花花的黑眼圈加重了吗</span>
+                </div>
+
+                <div class="flex-between">
+                    <span style="font-size:0.8rem; color:#4a5e74;">每行一个密码 · 可下载为 .ydk 文件</span>
+                    <button id="downloadYdkBtn" class="download">下载 .ydk 文件</button>
+                </div>
+
+                <div id="ydkOutput" class="ydk-output">
+                    <span style="color:#607b99;">ydk 文本将显示在这里</span>
+                </div>
+            </div>
+
+            <div class="footnote">
+                <span>纯前端 · 零依赖</span>
+                <span>#created by 固定展示</span>
+                <span>LGPL-3.0+ 精神</span>
+            </div>
         </div>
     </div>
 
     <script>
         (function(){
-            // ---------- 固定的 created by 内容 ----------
+            // ---------- 共用常量 ----------
             const CREATOR = '花花的黑眼圈加重了吗';
 
-            // ---------- 核心转换 (与原 ydke.js 一致) ----------
+            // ---------- 通用转换函数 (ydk ↔ ydke) ----------
+            function passcodesToBase64(passcodes) {
+                const bytes = new Uint8Array(passcodes.buffer);
+                let binary = '';
+                for (let i = 0; i < bytes.byteLength; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                return btoa(binary);
+            }
+
+            function toURL(deck) {
+                return 'ydke://' +
+                    passcodesToBase64(deck.main) + '!' +
+                    passcodesToBase64(deck.extra) + '!' +
+                    passcodesToBase64(deck.side) + '!';
+            }
+
+            function parseYdkText(text) {
+                const lines = text.split(/\r?\n/);
+                let section = null;
+                const mainArr = [], extraArr = [], sideArr = [];
+
+                for (let rawLine of lines) {
+                    const line = rawLine.trim();
+                    if (!line) continue;
+                    const lower = line.toLowerCase();
+                    if (lower === '#main' || lower === '!main') { section = 'main'; continue; }
+                    if (lower === '#extra' || lower === '!extra') { section = 'extra'; continue; }
+                    if (lower === '!side' || lower === '#side') { section = 'side'; continue; }
+                    if (line.startsWith('#') || line.startsWith('!')) continue;
+
+                    const num = Number(line);
+                    if (Number.isInteger(num) && num >= 0 && num <= 4294967295) {
+                        if (section === 'main') mainArr.push(num);
+                        else if (section === 'extra') extraArr.push(num);
+                        else if (section === 'side') sideArr.push(num);
+                    }
+                }
+
+                return {
+                    main: new Uint32Array(mainArr),
+                    extra: new Uint32Array(extraArr),
+                    side: new Uint32Array(sideArr)
+                };
+            }
+
             function base64ToPasscodes(base64) {
                 const binaryString = atob(base64);
                 const len = binaryString.length;
@@ -221,7 +420,6 @@
                 };
             }
 
-            // ---------- 将卡组对象整理成 YDK 文本 ----------
             function generateYdkText(deck) {
                 const lines = [];
                 lines.push(`#created by ${CREATOR}`);
@@ -234,50 +432,163 @@
                 return lines.join('\n');
             }
 
-            // ---------- 辅助 ----------
             function formatPasscodeArray(u32arr) {
                 if (!u32arr || u32arr.length === 0) return '[] (空)';
                 return '[' + Array.from(u32arr).join(', ') + ']';
             }
 
-            // ---------- 全局状态 ----------
-            let currentDeck = null;
+            // ================= 页面 1: ydk → ydke =================
+            let currentDeck1 = null;
 
-            // ---------- DOM ----------
+            const fileDrop = document.getElementById('fileDrop');
+            const fileInput = document.getElementById('fileInput');
+            const fileNameDisplay = document.getElementById('fileNameDisplay');
+            const clearFileBtn = document.getElementById('clearFileBtn');
+            const resultPanel = document.getElementById('resultPanel');
+            const parseResult1 = document.getElementById('parseResult');
+            const ydkePanel = document.getElementById('ydkePanel');
+            const ydkeOutput = document.getElementById('ydkeOutput');
+            const copyYdkeBtn = document.getElementById('copyYdkeBtn');
+
+            function renderResults1(deck, fileName) {
+                resultPanel.style.display = 'block';
+                parseResult1.innerHTML = `
+                    <div style="font-weight:600; margin-bottom:6px;">解析成功</div>
+                    <div><span class="u32-preview">主卡组 (${deck.main.length} 张)</span> <span class="passcode-list">${formatPasscodeArray(deck.main)}</span></div>
+                    <div><span class="u32-preview">额外卡组 (${deck.extra.length} 张)</span> <span class="passcode-list">${formatPasscodeArray(deck.extra)}</span></div>
+                    <div><span class="u32-preview">副卡组 (${deck.side.length} 张)</span> <span class="passcode-list">${formatPasscodeArray(deck.side)}</span></div>
+                `;
+                const ydkeUrl = toURL(deck);
+                ydkePanel.style.display = 'block';
+                ydkeOutput.textContent = ydkeUrl;
+                if (fileName) {
+                    fileNameDisplay.textContent = fileName;
+                    fileNameDisplay.style.display = 'inline-block';
+                }
+            }
+
+            function clearAll1() {
+                currentDeck1 = null;
+                fileInput.value = '';
+                fileNameDisplay.style.display = 'none';
+                fileNameDisplay.textContent = '';
+                resultPanel.style.display = 'none';
+                parseResult1.innerHTML = '<span style="color:#607b99;">解析结果将显示在这里</span>';
+                ydkePanel.style.display = 'none';
+                ydkeOutput.innerHTML = '<span style="color:#607b99;">ydke 链接将显示在这里</span>';
+            }
+
+            function handleFile(file) {
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const text = e.target.result;
+                    try {
+                        const deck = parseYdkText(text);
+                        if (deck.main.length === 0 && deck.extra.length === 0 && deck.side.length === 0) {
+                            throw new Error('未找到任何卡牌密码，请检查文件格式');
+                        }
+                        currentDeck1 = deck;
+                        renderResults1(deck, file.name);
+                    } catch (err) {
+                        currentDeck1 = null;
+                        resultPanel.style.display = 'block';
+                        parseResult1.innerHTML = `<span style="color:#b3402c;">错误: ${err.message}</span>`;
+                        ydkePanel.style.display = 'none';
+                    }
+                };
+                reader.onerror = () => {
+                    resultPanel.style.display = 'block';
+                    parseResult1.innerHTML = '<span style="color:#b3402c;">读取文件失败，请重试</span>';
+                    ydkePanel.style.display = 'none';
+                };
+                reader.readAsText(file);
+            }
+
+            // 事件绑定 (页面1)
+            fileDrop.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) handleFile(file);
+            });
+            fileDrop.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                fileDrop.classList.add('dragover');
+            });
+            fileDrop.addEventListener('dragleave', () => {
+                fileDrop.classList.remove('dragover');
+            });
+            fileDrop.addEventListener('drop', (e) => {
+                e.preventDefault();
+                fileDrop.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file) {
+                    if (!file.name.toLowerCase().endsWith('.ydk')) {
+                        resultPanel.style.display = 'block';
+                        parseResult1.innerHTML = '<span style="color:#b3402c;">请上传 .ydk 文件</span>';
+                        ydkePanel.style.display = 'none';
+                        return;
+                    }
+                    handleFile(file);
+                }
+            });
+            clearFileBtn.addEventListener('click', clearAll1);
+            copyYdkeBtn.addEventListener('click', () => {
+                const text = ydkeOutput.textContent.trim();
+                if (!text || text === 'ydke 链接将显示在这里') {
+                    alert('暂无链接可复制');
+                    return;
+                }
+                navigator.clipboard.writeText(text).then(() => {
+                    copyYdkeBtn.textContent = '已复制';
+                    setTimeout(() => { copyYdkeBtn.textContent = '复制链接'; }, 1500);
+                }).catch(() => {
+                    const ta = document.createElement('textarea');
+                    ta.value = text;
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(ta);
+                    copyYdkeBtn.textContent = '已复制';
+                    setTimeout(() => { copyYdkeBtn.textContent = '复制链接'; }, 1500);
+                });
+            });
+
+            // ================= 页面 2: ydke → ydk =================
+            let currentDeck2 = null;
+
             const ydkeInput = document.getElementById('ydkeInput');
             const parseBtn = document.getElementById('parseBtn');
             const clearBtn = document.getElementById('clearBtn');
-            const parseResult = document.getElementById('parseResult');
+            const parseResult2 = document.getElementById('parseResult2');
             const ydkPanel = document.getElementById('ydkPanel');
             const ydkOutput = document.getElementById('ydkOutput');
             const downloadYdkBtn = document.getElementById('downloadYdkBtn');
 
-            // ---------- 渲染 ydk 文本 ----------
             function renderYdk() {
-                if (!currentDeck) {
+                if (!currentDeck2) {
                     ydkOutput.innerHTML = '<span style="color:#607b99;">ydk 文本将显示在这里</span>';
                     return;
                 }
-                const ydkText = generateYdkText(currentDeck);
+                const ydkText = generateYdkText(currentDeck2);
                 const escaped = ydkText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                 ydkOutput.innerHTML = escaped;
             }
 
-            // ---------- 解析 + 自动整理 ----------
             function performParse() {
                 const raw = ydkeInput.value.trim();
                 if (!raw) {
-                    parseResult.innerHTML = '请输入 ydke:// 链接';
-                    parseResult.classList.add('error');
+                    parseResult2.innerHTML = '请输入 ydke:// 链接';
+                    parseResult2.classList.add('error');
                     ydkPanel.style.display = 'none';
                     return;
                 }
                 try {
                     const deck = parseURL(raw);
-                    currentDeck = deck;
+                    currentDeck2 = deck;
 
-                    parseResult.classList.remove('error');
-                    parseResult.innerHTML = `
+                    parseResult2.classList.remove('error');
+                    parseResult2.innerHTML = `
                         <div style="font-weight:600; margin-bottom:6px;">解析成功</div>
                         <div><span class="u32-preview">主卡组 (${deck.main.length} 张)</span> <span class="passcode-list">${formatPasscodeArray(deck.main)}</span></div>
                         <div><span class="u32-preview">额外卡组 (${deck.extra.length} 张)</span> <span class="passcode-list">${formatPasscodeArray(deck.extra)}</span></div>
@@ -287,20 +598,19 @@
                     ydkPanel.style.display = 'block';
                     renderYdk();
                 } catch (e) {
-                    parseResult.classList.add('error');
-                    parseResult.innerHTML = `错误: ${e.message}`;
+                    parseResult2.classList.add('error');
+                    parseResult2.innerHTML = `错误: ${e.message}`;
                     ydkPanel.style.display = 'none';
-                    currentDeck = null;
+                    currentDeck2 = null;
                 }
             }
 
-            // ---------- 下载 .ydk 文件 ----------
             function downloadYdk() {
-                if (!currentDeck) {
+                if (!currentDeck2) {
                     alert('暂无卡组数据，请先解析 ydke 链接');
                     return;
                 }
-                const ydkText = generateYdkText(currentDeck);
+                const ydkText = generateYdkText(currentDeck2);
                 const now = new Date();
                 const pad = (n) => n.toString().padStart(2, '0');
                 const filename = `ydk_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.ydk`;
@@ -320,24 +630,43 @@
                 setTimeout(() => { downloadYdkBtn.textContent = originalText; }, 1500);
             }
 
-            // ---------- 事件绑定 ----------
             parseBtn.addEventListener('click', performParse);
             clearBtn.addEventListener('click', () => {
                 ydkeInput.value = '';
-                parseResult.innerHTML = '<span style="color:#607b99;">解析结果将显示在这里</span>';
-                parseResult.classList.remove('error');
+                parseResult2.innerHTML = '<span style="color:#607b99;">解析结果将显示在这里</span>';
+                parseResult2.classList.remove('error');
                 ydkPanel.style.display = 'none';
-                currentDeck = null;
+                currentDeck2 = null;
             });
-
             downloadYdkBtn.addEventListener('click', downloadYdk);
-
             ydkeInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     performParse();
                 }
             });
+
+            // ================= 页签切换逻辑 =================
+            const tab1 = document.getElementById('tabYdkToYdke');
+            const tab2 = document.getElementById('tabYdkeToYdk');
+            const page1 = document.getElementById('pageYdkToYdke');
+            const page2 = document.getElementById('pageYdkeToYdk');
+
+            function switchTab(activeTab, activePage) {
+                // 移除所有 active
+                [tab1, tab2].forEach(t => t.classList.remove('active'));
+                [page1, page2].forEach(p => p.classList.remove('active'));
+                // 激活目标
+                activeTab.classList.add('active');
+                activePage.classList.add('active');
+            }
+
+            tab1.addEventListener('click', () => switchTab(tab1, page1));
+            tab2.addEventListener('click', () => switchTab(tab2, page2));
+
+            // 阻止页面默认拖拽行为
+            window.addEventListener('dragover', (e) => e.preventDefault());
+            window.addEventListener('drop', (e) => e.preventDefault());
         })();
     </script>
 </body>
