@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ydk ↔ ydke 双向转换工具</title>
+    <title>ydk ↔ ydke 双向转换 · 二维码增强版</title>
+    <!-- 使用 qrcodejs 生成二维码 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         * { box-sizing: border-box; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
         body {
@@ -16,7 +18,7 @@
             border-radius: 28px; box-shadow: 0 20px 35px -8px rgba(0,0,0,0.15), 0 4px 8px -2px rgba(0,0,0,0.05);
             padding: 2rem 2rem 1.8rem; border: 1px solid #e9eef3;
         }
-        /* 页签切换器 */
+        /* 顶层页签 */
         .tab-switch {
             display: flex;
             gap: 8px;
@@ -42,30 +44,14 @@
             gap: 8px;
             box-shadow: none;
         }
-        .tab-btn:hover {
-            background: #d9e6ff;
-            color: #1e4b8f;
-        }
-        .tab-btn.active {
-            background: white;
-            color: #0b1a2b;
-            box-shadow: 0 4px 10px -4px rgba(0,0,0,0.1);
-        }
+        .tab-btn:hover { background: #d9e6ff; color: #1e4b8f; }
+        .tab-btn.active { background: white; color: #0b1a2b; box-shadow: 0 4px 10px -4px rgba(0,0,0,0.1); }
         .tab-btn .badge {
-            font-size: 0.7rem;
-            background: #dbeafe;
-            padding: 2px 8px;
-            border-radius: 30px;
-            color: #1e4b8f;
-            font-weight: 400;
+            font-size: 0.7rem; background: #dbeafe; padding: 2px 8px;
+            border-radius: 30px; color: #1e4b8f; font-weight: 400;
         }
-        /* 页面容器 */
-        .page {
-            display: none;
-        }
-        .page.active {
-            display: block;
-        }
+        .page { display: none; }
+        .page.active { display: block; }
         h1 {
             font-size: 1.9rem; font-weight: 600; letter-spacing: -0.01em;
             margin: 0 0 0.2rem 0; display: flex; align-items: center; gap: 8px; color: #0b1a2b;
@@ -80,9 +66,7 @@
             background: #f2f7ff; border-radius: 0 12px 12px 0;
             padding: 0.8rem 1rem; line-height: 1.5;
         }
-        .subhead code {
-            background: #d9e6ff; padding: 0.2rem 0.4rem; border-radius: 8px; font-size: 0.9em;
-        }
+        .subhead code { background: #d9e6ff; padding: 0.2rem 0.4rem; border-radius: 8px; font-size: 0.9em; }
         .panel {
             background: #ffffff; border-radius: 20px; border: 1px solid #e2e9f1;
             padding: 1.2rem 1.2rem 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.02);
@@ -126,16 +110,12 @@
             box-shadow: 0 4px 8px -4px rgba(0,0,0,0.1);
         }
         button:active { background: #e4efff; transform: scale(0.98); }
-        button.primary {
-            background: #1e4b8f; border-color: #1e4b8f; color: white;
-        }
+        button.primary { background: #1e4b8f; border-color: #1e4b8f; color: white; }
         button.primary:hover { background: #103c73; border-color: #103c73; }
         button.primary:active { background: #0b2b52; }
         button.outline { background: transparent; border: 1px solid #cdddeb; }
         button.small { padding: 0.3rem 0.9rem; font-size: 0.8rem; border-radius: 30px; }
-        button.download {
-            background: #0f6b4b; border-color: #0f6b4b; color: white;
-        }
+        button.download { background: #0f6b4b; border-color: #0f6b4b; color: white; }
         button.download:hover { background: #0a5138; border-color: #0a5138; }
         button.download:active { background: #07412d; }
         .result-area {
@@ -144,9 +124,7 @@
             font-size: 0.9rem; word-break: break-all; color: #0b2b52;
             transition: background 0.1s; min-height: 3.2rem;
         }
-        .result-area.error {
-            background: #fff2f0; border-color: #f5b5ab; color: #b3402c;
-        }
+        .result-area.error { background: #fff2f0; border-color: #f5b5ab; color: #b3402c; }
         .passcode-list {
             font-family: 'SF Mono', monospace; background: #ffffffc0;
             padding: 0.4rem 0.8rem; border-radius: 10px; margin: 0.2rem 0;
@@ -177,9 +155,7 @@
             display: flex; align-items: center; gap: 10px; margin-bottom: 0.8rem;
             flex-wrap: wrap;
         }
-        .creator-row label {
-            margin-bottom: 0; text-transform: none; font-size: 0.85rem; flex: 0 0 auto;
-        }
+        .creator-row label { margin-bottom: 0; text-transform: none; font-size: 0.85rem; flex: 0 0 auto; }
         .creator-row .creator-value {
             font-family: 'SF Mono', monospace; font-size: 0.85rem;
             color: #0b2b52; background: #f0f5fe; padding: 0.4rem 1rem;
@@ -191,15 +167,9 @@
             text-align: center; color: #4a5e74; background: #fbfdff;
             transition: all 0.15s; cursor: pointer; margin-bottom: 0.5rem;
         }
-        .file-drop.dragover {
-            border-color: #3b82f6; background: #eef6ff;
-        }
-        .file-drop input[type="file"] {
-            display: none;
-        }
-        .file-drop .hint {
-            font-size: 0.85rem; color: #6d829c; margin-top: 0.5rem;
-        }
+        .file-drop.dragover { border-color: #3b82f6; background: #eef6ff; }
+        .file-drop input[type="file"] { display: none; }
+        .file-drop .hint { font-size: 0.85rem; color: #6d829c; margin-top: 0.5rem; }
         .file-name {
             font-family: 'SF Mono', monospace; font-size: 0.85rem;
             color: #1e4b8f; background: #eef4fc; padding: 0.3rem 0.9rem;
@@ -218,27 +188,73 @@
         }
         .copy-btn:hover { background: #dcebff; border-color: #8bb3e0; }
         .page-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 0.2rem; }
-        /* 作者链接样式 */
         .author-link {
-            color: #1e4b8f;
-            text-decoration: none;
-            font-weight: 500;
+            color: #1e4b8f; text-decoration: none; font-weight: 500;
             border-bottom: 1px dashed #8bb3e0;
             transition: color 0.15s, border-color 0.15s;
         }
-        .author-link:hover {
-            color: #0a2b5c;
-            border-bottom-color: #1e4b8f;
+        .author-link:hover { color: #0a2b5c; border-bottom-color: #1e4b8f; }
+        /* 二维码区域 */
+        .qr-container {
+            display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;
+            margin-top: 1rem; background: #f3f9ff; border-radius: 20px;
+            padding: 1rem 1.5rem; border: 1px solid #d7e3f0;
+        }
+        .qr-box {
+            background: white; border-radius: 16px; padding: 0.8rem;
+            box-shadow: 0 4px 10px -4px rgba(0,0,0,0.1);
+            border: 1px solid #e2e9f1; display: inline-flex;
+            align-items: center; justify-content: center;
+            line-height: 0; min-width: 160px; min-height: 160px;
+        }
+        .qr-box img, .qr-box canvas {
+            display: block; width: 160px !important; height: 160px !important; border-radius: 8px;
+        }
+        .qr-info { flex: 1; font-size: 0.9rem; color: #1e3a5f; min-width: 180px; }
+        .qr-info .small-hint { font-size: 0.8rem; color: #5b6d82; margin-top: 0.4rem; }
+        .qr-download {
+            background: #0f6b4b; border: none; color: white;
+            padding: 0.5rem 1.2rem; border-radius: 40px; font-weight: 500;
+            font-size: 0.85rem; cursor: pointer; display: inline-flex;
+            align-items: center; gap: 6px; transition: 0.15s;
+            margin-top: 0.8rem; border: 1px solid #0a5138;
+        }
+        .qr-download:hover { background: #0a5138; }
+        .hidden { display: none; }
+        .qr-placeholder { color: #a0b6cc; font-size: 0.85rem; text-align: center; padding: 1rem; }
+
+        /* 输入方式切换小页签 (上传 / 手动输入) */
+        .input-method-switch {
+            display: flex; gap: 6px; background: #eef2f6;
+            border-radius: 40px; padding: 5px; width: fit-content;
+            margin-bottom: 1rem;
+        }
+        .method-btn {
+            background: transparent; border: none; border-radius: 40px;
+            padding: 0.45rem 1.3rem; font-weight: 500; font-size: 0.85rem;
+            color: #3a4d64; cursor: pointer; transition: all 0.15s;
+        }
+        .method-btn:hover { background: #d9e6ff; color: #1e4b8f; }
+        .method-btn.active {
+            background: white; color: #0b1a2b;
+            box-shadow: 0 4px 10px -4px rgba(0,0,0,0.1);
+        }
+        .method-panel { display: none; }
+        .method-panel.active { display: block; }
+        .textarea-ydk {
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            min-height: 200px; line-height: 1.6;
+            white-space: pre; overflow-x: auto;
         }
     </style>
 </head>
 <body>
     <div class="card">
-        <!-- 页签切换器 -->
+        <!-- 顶层页签 -->
         <div class="tab-switch">
             <button id="tabYdkToYdke" class="tab-btn active">
                 ydk → ydke
-                <span class="badge">上传文件</span>
+                <span class="badge">上传 / 输入</span>
             </button>
             <button id="tabYdkeToYdk" class="tab-btn">
                 ydke → ydk
@@ -251,24 +267,51 @@
             <div class="page-header">
                 <h1>
                     ydk → ydke 转换工具
-                    <small>上传文件生成链接</small>
+                    <small>生成链接 & 二维码</small>
                 </h1>
             </div>
             <div class="subhead">
-                上传 <code>.ydk</code> 文件 → 解析卡组 → 生成 <code>ydke://</code> 链接
+                上传 <code>.ydk</code> 文件或手动输入 ydk 内容 → 解析卡组 → 生成 <code>ydke://</code> 链接 + 二维码
             </div>
 
-            <!-- 上传区域 -->
+            <!-- 输入方式选择 -->
             <div class="panel">
-                <h2>上传 YDK 文件 <span>选择或拖拽 .ydk 文件</span></h2>
-                <div class="file-drop" id="fileDrop">
-                    <input type="file" id="fileInput" accept=".ydk,text/plain">
-                    <div style="font-size: 1.1rem; font-weight: 500; color: #1e4b8f;">点击选择文件</div>
-                    <div class="hint">或将 .ydk 文件拖拽到这里</div>
-                    <div id="fileNameDisplay" class="file-name" style="display: none;"></div>
+                <h2>输入 YDK 内容 <span>选择一种方式</span></h2>
+                <div class="input-method-switch">
+                    <button id="methodUpload" class="method-btn active">上传文件</button>
+                    <button id="methodManual" class="method-btn">手动输入</button>
                 </div>
-                <div class="inline-buttons">
-                    <button id="clearFileBtn" class="outline small">清空</button>
+
+                <!-- 方式一：上传文件 -->
+                <div id="methodPanelUpload" class="method-panel active">
+                    <div class="file-drop" id="fileDrop">
+                        <input type="file" id="fileInput" accept=".ydk,text/plain">
+                        <div style="font-size: 1.1rem; font-weight: 500; color: #1e4b8f;">点击选择文件</div>
+                        <div class="hint">或将 .ydk 文件拖拽到这里</div>
+                        <div id="fileNameDisplay" class="file-name" style="display: none;"></div>
+                    </div>
+                    <div class="inline-buttons">
+                        <button id="clearFileBtn" class="outline small">清空文件</button>
+                    </div>
+                </div>
+
+                <!-- 方式二：手动输入 -->
+                <div id="methodPanelManual" class="method-panel">
+                    <div class="field-group">
+                        <label for="ydkTextInput">粘贴或输入 ydk 内容</label>
+                        <textarea id="ydkTextInput" class="textarea-ydk" placeholder="#created by ...
+#main
+89631139
+...
+#extra
+...
+!side
+..."></textarea>
+                    </div>
+                    <div class="inline-buttons">
+                        <button id="parseManualBtn" class="primary">解析并生成</button>
+                        <button id="clearManualBtn" class="outline small">清空</button>
+                    </div>
                 </div>
             </div>
 
@@ -280,15 +323,22 @@
                 </div>
             </div>
 
-            <!-- 生成的 ydke 链接 -->
+            <!-- 生成的 ydke 链接 + 二维码 -->
             <div class="panel" id="ydkePanel" style="display: none;">
-                <h2>生成的 ydke:// 链接 <span>可直接复制</span></h2>
+                <h2>生成的 ydke:// 链接 <span>可直接复制 · 二维码分享</span></h2>
                 <div class="flex-between">
                     <span style="font-size:0.8rem; color:#4a5e74;">点击复制按钮将链接复制到剪贴板</span>
                     <button id="copyYdkeBtn" class="copy-btn">复制链接</button>
                 </div>
                 <div id="ydkeOutput" class="ydke-output">
                     <span style="color:#607b99;">ydke 链接将显示在这里</span>
+                </div>
+                <!-- 二维码容器 -->
+                <div id="qrContainer" class="qr-container hidden">
+                    <div class="qr-box" id="qrCanvasWrapper"></div>
+                    <div class="qr-info">
+                        <button id="downloadQrBtn" class="qr-download">⬇ 下载二维码</button>
+                    </div>
                 </div>
             </div>
 
@@ -309,7 +359,6 @@
                 解析 <code>ydke://</code> 链接 → 自动整理成 <code>.ydk</code> 文本格式（#main / #extra / !side）
             </div>
 
-            <!-- 解析 ydke 输入 -->
             <div class="panel">
                 <h2>解析 ydke:// 链接 <span>parseURL → ydk</span></h2>
                 <div class="field-group">
@@ -320,27 +369,21 @@
                     <button id="parseBtn" class="primary">解析并整理成 ydk</button>
                     <button id="clearBtn" class="outline small">清空</button>
                 </div>
-
-                <!-- 解析结果 (三个列表) -->
                 <div id="parseResult2" class="result-area" style="margin-top: 1rem;">
                     <span style="color:#607b99;">解析结果将显示在这里</span>
                 </div>
             </div>
 
-            <!-- ydk 整理输出 -->
             <div class="panel" id="ydkPanel" style="display: none;">
                 <h2>整理后的 YDK 文本 <span>可直接保存为 .ydk</span></h2>
-
                 <div class="creator-row">
                     <label>#created by</label>
                     <span class="creator-value">花花的黑眼圈加重了吗</span>
                 </div>
-
                 <div class="flex-between">
                     <span style="font-size:0.8rem; color:#4a5e74;">每行一个密码 · 可下载为 .ydk 文件</span>
                     <button id="downloadYdkBtn" class="download">下载 .ydk 文件</button>
                 </div>
-
                 <div id="ydkOutput" class="ydk-output">
                     <span style="color:#607b99;">ydk 文本将显示在这里</span>
                 </div>
@@ -354,31 +397,25 @@
 
     <script>
         (function(){
-            // ---------- 共用常量 ----------
             const CREATOR = '花花的黑眼圈加重了吗';
 
-            // ---------- 通用转换函数 (ydk ↔ ydke) ----------
+            // ---------- 通用转换函数 ----------
             function passcodesToBase64(passcodes) {
                 const bytes = new Uint8Array(passcodes.buffer);
                 let binary = '';
-                for (let i = 0; i < bytes.byteLength; i++) {
-                    binary += String.fromCharCode(bytes[i]);
-                }
+                for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
                 return btoa(binary);
             }
-
             function toURL(deck) {
                 return 'ydke://' +
                     passcodesToBase64(deck.main) + '!' +
                     passcodesToBase64(deck.extra) + '!' +
                     passcodesToBase64(deck.side) + '!';
             }
-
             function parseYdkText(text) {
                 const lines = text.split(/\r?\n/);
                 let section = null;
                 const mainArr = [], extraArr = [], sideArr = [];
-
                 for (let rawLine of lines) {
                     const line = rawLine.trim();
                     if (!line) continue;
@@ -387,7 +424,6 @@
                     if (lower === '#extra' || lower === '!extra') { section = 'extra'; continue; }
                     if (lower === '!side' || lower === '#side') { section = 'side'; continue; }
                     if (line.startsWith('#') || line.startsWith('!')) continue;
-
                     const num = Number(line);
                     if (Number.isInteger(num) && num >= 0 && num <= 4294967295) {
                         if (section === 'main') mainArr.push(num);
@@ -395,39 +431,29 @@
                         else if (section === 'side') sideArr.push(num);
                     }
                 }
-
                 return {
                     main: new Uint32Array(mainArr),
                     extra: new Uint32Array(extraArr),
                     side: new Uint32Array(sideArr)
                 };
             }
-
             function base64ToPasscodes(base64) {
                 const binaryString = atob(base64);
                 const len = binaryString.length;
                 const bytes = new Uint8Array(len);
-                for (let i = 0; i < len; i++) {
-                    bytes[i] = binaryString.charCodeAt(i);
-                }
+                for (let i = 0; i < len; i++) bytes[i] = binaryString.charCodeAt(i);
                 return new Uint32Array(bytes.buffer);
             }
-
             function parseURL(ydke) {
-                if (!ydke.startsWith('ydke://')) {
-                    throw new Error('Unrecognized URL protocol');
-                }
+                if (!ydke.startsWith('ydke://')) throw new Error('Unrecognized URL protocol');
                 const components = ydke.slice('ydke://'.length).split('!');
-                if (components.length < 3) {
-                    throw new Error('Missing ydke URL component');
-                }
+                if (components.length < 3) throw new Error('Missing ydke URL component');
                 return {
                     main: base64ToPasscodes(components[0]),
                     extra: base64ToPasscodes(components[1]),
                     side: base64ToPasscodes(components[2])
                 };
             }
-
             function generateYdkText(deck) {
                 const lines = [];
                 lines.push(`#created by ${CREATOR}`);
@@ -439,7 +465,6 @@
                 deck.side.forEach(p => lines.push(p.toString()));
                 return lines.join('\n');
             }
-
             function formatPasscodeArray(u32arr) {
                 if (!u32arr || u32arr.length === 0) return '[] (空)';
                 return '[' + Array.from(u32arr).join(', ') + ']';
@@ -447,17 +472,75 @@
 
             // ================= 页面 1: ydk → ydke =================
             let currentDeck1 = null;
+            let qrCodeInstance = null;
 
             const fileDrop = document.getElementById('fileDrop');
             const fileInput = document.getElementById('fileInput');
             const fileNameDisplay = document.getElementById('fileNameDisplay');
             const clearFileBtn = document.getElementById('clearFileBtn');
+            const ydkTextInput = document.getElementById('ydkTextInput');
+            const parseManualBtn = document.getElementById('parseManualBtn');
+            const clearManualBtn = document.getElementById('clearManualBtn');
             const resultPanel = document.getElementById('resultPanel');
             const parseResult1 = document.getElementById('parseResult');
             const ydkePanel = document.getElementById('ydkePanel');
             const ydkeOutput = document.getElementById('ydkeOutput');
             const copyYdkeBtn = document.getElementById('copyYdkeBtn');
+            const qrContainer = document.getElementById('qrContainer');
+            const qrCanvasWrapper = document.getElementById('qrCanvasWrapper');
+            const downloadQrBtn = document.getElementById('downloadQrBtn');
 
+            // 输入方式切换
+            const methodUploadBtn = document.getElementById('methodUpload');
+            const methodManualBtn = document.getElementById('methodManual');
+            const methodPanelUpload = document.getElementById('methodPanelUpload');
+            const methodPanelManual = document.getElementById('methodPanelManual');
+
+            function switchMethod(type) {
+                if (type === 'upload') {
+                    methodUploadBtn.classList.add('active');
+                    methodManualBtn.classList.remove('active');
+                    methodPanelUpload.classList.add('active');
+                    methodPanelManual.classList.remove('active');
+                } else {
+                    methodUploadBtn.classList.remove('active');
+                    methodManualBtn.classList.add('active');
+                    methodPanelUpload.classList.remove('active');
+                    methodPanelManual.classList.add('active');
+                }
+            }
+            methodUploadBtn.addEventListener('click', () => switchMethod('upload'));
+            methodManualBtn.addEventListener('click', () => switchMethod('manual'));
+
+            // 二维码清除 / 渲染
+            function clearQRCode() {
+                if (qrCodeInstance) {
+                    try { qrCodeInstance.clear(); } catch(e) {}
+                    qrCodeInstance = null;
+                }
+                qrCanvasWrapper.innerHTML = '';
+            }
+            function renderQRCode(text) {
+                clearQRCode();
+                if (!text) { qrContainer.classList.add('hidden'); return; }
+                try {
+                    qrContainer.classList.remove('hidden');
+                    qrCodeInstance = new QRCode(qrCanvasWrapper, {
+                        text: text,
+                        width: 160,
+                        height: 160,
+                        colorDark: '#0b1a2b',
+                        colorLight: '#ffffff',
+                        correctLevel: QRCode.CorrectLevel.M
+                    });
+                } catch (err) {
+                    console.error('二维码生成失败:', err);
+                    qrCanvasWrapper.innerHTML = '<div class="qr-placeholder">二维码生成失败</div>';
+                    qrContainer.classList.remove('hidden');
+                }
+            }
+
+            // 共用渲染结果
             function renderResults1(deck, fileName) {
                 resultPanel.style.display = 'block';
                 parseResult1.innerHTML = `
@@ -473,19 +556,29 @@
                     fileNameDisplay.textContent = fileName;
                     fileNameDisplay.style.display = 'inline-block';
                 }
+                renderQRCode(ydkeUrl);
             }
 
-            function clearAll1() {
+            // 清除页面1的所有结果（保留输入方式选择）
+            function clearPage1Result() {
                 currentDeck1 = null;
-                fileInput.value = '';
-                fileNameDisplay.style.display = 'none';
-                fileNameDisplay.textContent = '';
                 resultPanel.style.display = 'none';
                 parseResult1.innerHTML = '<span style="color:#607b99;">解析结果将显示在这里</span>';
                 ydkePanel.style.display = 'none';
                 ydkeOutput.innerHTML = '<span style="color:#607b99;">ydke 链接将显示在这里</span>';
+                clearQRCode();
+                qrContainer.classList.add('hidden');
             }
 
+            // 清空文件
+            function clearFileAll() {
+                fileInput.value = '';
+                fileNameDisplay.style.display = 'none';
+                fileNameDisplay.textContent = '';
+                clearPage1Result();
+            }
+
+            // 处理文件
             function handleFile(file) {
                 if (!file) return;
                 const reader = new FileReader();
@@ -503,17 +596,49 @@
                         resultPanel.style.display = 'block';
                         parseResult1.innerHTML = `<span style="color:#b3402c;">错误: ${err.message}</span>`;
                         ydkePanel.style.display = 'none';
+                        clearQRCode();
+                        qrContainer.classList.add('hidden');
                     }
                 };
                 reader.onerror = () => {
                     resultPanel.style.display = 'block';
                     parseResult1.innerHTML = '<span style="color:#b3402c;">读取文件失败，请重试</span>';
                     ydkePanel.style.display = 'none';
+                    clearQRCode();
+                    qrContainer.classList.add('hidden');
                 };
                 reader.readAsText(file);
             }
 
-            // 事件绑定 (页面1)
+            // 处理手动输入
+            function handleManualInput() {
+                const text = ydkTextInput.value;
+                if (!text.trim()) {
+                    resultPanel.style.display = 'block';
+                    parseResult1.innerHTML = '<span style="color:#b3402c;">请输入 ydk 内容</span>';
+                    ydkePanel.style.display = 'none';
+                    clearQRCode();
+                    qrContainer.classList.add('hidden');
+                    return;
+                }
+                try {
+                    const deck = parseYdkText(text);
+                    if (deck.main.length === 0 && deck.extra.length === 0 && deck.side.length === 0) {
+                        throw new Error('未找到任何卡牌密码，请检查输入格式（#main / #extra / !side）');
+                    }
+                    currentDeck1 = deck;
+                    renderResults1(deck, null); // 手动输入无文件名
+                } catch (err) {
+                    currentDeck1 = null;
+                    resultPanel.style.display = 'block';
+                    parseResult1.innerHTML = `<span style="color:#b3402c;">错误: ${err.message}</span>`;
+                    ydkePanel.style.display = 'none';
+                    clearQRCode();
+                    qrContainer.classList.add('hidden');
+                }
+            }
+
+            // 上传相关事件
             fileDrop.addEventListener('click', () => fileInput.click());
             fileInput.addEventListener('change', (e) => {
                 const file = e.target.files[0];
@@ -523,9 +648,7 @@
                 e.preventDefault();
                 fileDrop.classList.add('dragover');
             });
-            fileDrop.addEventListener('dragleave', () => {
-                fileDrop.classList.remove('dragover');
-            });
+            fileDrop.addEventListener('dragleave', () => fileDrop.classList.remove('dragover'));
             fileDrop.addEventListener('drop', (e) => {
                 e.preventDefault();
                 fileDrop.classList.remove('dragover');
@@ -535,12 +658,23 @@
                         resultPanel.style.display = 'block';
                         parseResult1.innerHTML = '<span style="color:#b3402c;">请上传 .ydk 文件</span>';
                         ydkePanel.style.display = 'none';
+                        clearQRCode();
+                        qrContainer.classList.add('hidden');
                         return;
                     }
                     handleFile(file);
                 }
             });
-            clearFileBtn.addEventListener('click', clearAll1);
+            clearFileBtn.addEventListener('click', clearFileAll);
+
+            // 手动输入相关事件
+            parseManualBtn.addEventListener('click', handleManualInput);
+            clearManualBtn.addEventListener('click', () => {
+                ydkTextInput.value = '';
+                clearPage1Result();
+            });
+
+            // 复制链接
             copyYdkeBtn.addEventListener('click', () => {
                 const text = ydkeOutput.textContent.trim();
                 if (!text || text === 'ydke 链接将显示在这里') {
@@ -562,9 +696,23 @@
                 });
             });
 
+            // 下载二维码
+            downloadQrBtn.addEventListener('click', () => {
+                const img = qrCanvasWrapper.querySelector('img');
+                const canvas = qrCanvasWrapper.querySelector('canvas');
+                const target = img || canvas;
+                if (!target) {
+                    alert('暂无二维码可下载，请先生成 ydke 链接');
+                    return;
+                }
+                const link = document.createElement('a');
+                link.download = `ydke_qr_${Date.now()}.png`;
+                link.href = img ? img.src : canvas.toDataURL('image/png');
+                link.click();
+            });
+
             // ================= 页面 2: ydke → ydk =================
             let currentDeck2 = null;
-
             const ydkeInput = document.getElementById('ydkeInput');
             const parseBtn = document.getElementById('parseBtn');
             const clearBtn = document.getElementById('clearBtn');
@@ -594,7 +742,6 @@
                 try {
                     const deck = parseURL(raw);
                     currentDeck2 = deck;
-
                     parseResult2.classList.remove('error');
                     parseResult2.innerHTML = `
                         <div style="font-weight:600; margin-bottom:6px;">解析成功</div>
@@ -602,7 +749,6 @@
                         <div><span class="u32-preview">额外卡组 (${deck.extra.length} 张)</span> <span class="passcode-list">${formatPasscodeArray(deck.extra)}</span></div>
                         <div><span class="u32-preview">副卡组 (${deck.side.length} 张)</span> <span class="passcode-list">${formatPasscodeArray(deck.side)}</span></div>
                     `;
-
                     ydkPanel.style.display = 'block';
                     renderYdk();
                 } catch (e) {
@@ -622,7 +768,6 @@
                 const now = new Date();
                 const pad = (n) => n.toString().padStart(2, '0');
                 const filename = `ydk_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.ydk`;
-
                 const blob = new Blob([ydkText], { type: 'text/plain;charset=utf-8' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -632,7 +777,6 @@
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
-
                 const originalText = downloadYdkBtn.textContent;
                 downloadYdkBtn.textContent = '已开始下载';
                 setTimeout(() => { downloadYdkBtn.textContent = originalText; }, 1500);
@@ -654,7 +798,7 @@
                 }
             });
 
-            // ================= 页签切换逻辑 =================
+            // ================= 顶层页签切换 =================
             const tab1 = document.getElementById('tabYdkToYdke');
             const tab2 = document.getElementById('tabYdkeToYdk');
             const page1 = document.getElementById('pageYdkToYdke');
@@ -666,13 +810,13 @@
                 activeTab.classList.add('active');
                 activePage.classList.add('active');
             }
-
             tab1.addEventListener('click', () => switchTab(tab1, page1));
             tab2.addEventListener('click', () => switchTab(tab2, page2));
 
-            // 阻止页面默认拖拽行为
             window.addEventListener('dragover', (e) => e.preventDefault());
             window.addEventListener('drop', (e) => e.preventDefault());
+
+            qrContainer.classList.add('hidden');
         })();
     </script>
 </body>
