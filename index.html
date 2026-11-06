@@ -218,6 +218,18 @@
         }
         .copy-btn:hover { background: #dcebff; border-color: #8bb3e0; }
         .page-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 0.2rem; }
+        /* 作者链接样式 */
+        .author-link {
+            color: #1e4b8f;
+            text-decoration: none;
+            font-weight: 500;
+            border-bottom: 1px dashed #8bb3e0;
+            transition: color 0.15s, border-color 0.15s;
+        }
+        .author-link:hover {
+            color: #0a2b5c;
+            border-bottom-color: #1e4b8f;
+        }
     </style>
 </head>
 <body>
@@ -281,9 +293,7 @@
             </div>
 
             <div class="footnote">
-                <span>纯前端 · 零依赖</span>
-                <span>小端序 Uint32Array reinterpret</span>
-                <span>LGPL-3.0+ 精神</span>
+                <span>作者：<a href="https://space.bilibili.com/36413360" target="_blank" rel="noopener noreferrer" class="author-link">花花的黑眼圈加重了吗</a></span>
             </div>
         </div>
 
@@ -337,9 +347,7 @@
             </div>
 
             <div class="footnote">
-                <span>纯前端 · 零依赖</span>
-                <span>#created by 固定展示</span>
-                <span>LGPL-3.0+ 精神</span>
+                <span>作者：<a href="https://space.bilibili.com/36413360" target="_blank" rel="noopener noreferrer" class="author-link">花花的黑眼圈加重了吗</a></span>
             </div>
         </div>
     </div>
@@ -653,10 +661,8 @@
             const page2 = document.getElementById('pageYdkeToYdk');
 
             function switchTab(activeTab, activePage) {
-                // 移除所有 active
                 [tab1, tab2].forEach(t => t.classList.remove('active'));
                 [page1, page2].forEach(p => p.classList.remove('active'));
-                // 激活目标
                 activeTab.classList.add('active');
                 activePage.classList.add('active');
             }
